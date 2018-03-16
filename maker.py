@@ -5,10 +5,12 @@ import io
 
 class Asset:
 	def __init__(self, offset):
+		# initialize icon, nacp, and romfs
 		self.nacp = bytearray([])
 		self.icon = bytearray([])
 		self.romfs = bytearray([])
 		
+		# offset is the total size of the .nro excluding these asset section
 		self.offset = offset
 		
 	# load this asset object with data from a bunch of bytes
@@ -37,12 +39,42 @@ class Asset:
 		self.author =  self.nacp[0x200:0x300].decode("utf-8").strip("\x00")
 		self.version = self.nacp[0x3060:0x3070].decode("utf-8").strip("\x00")
 		
+	def updateNACP(self, editor):
+		
+		my_name = editor.name.get()
+		my_author = editor.author.get()
+		my_version = editor.version.get()
+		
+		# NACP should have size 0x4000, extend the byte array if this is not already true
+		if len(self.nacp) < 0x4000:
+			self.nacp += bytearray([0]*(0x4000 - len(self.nacp)))
+		
+		# TODO: fill out some more fields? http://switchbrew.org/index.php?title=Control.
+		# we're only going to fill out name, author, and version using as much
+		# existing information as possible
+		
+		# 15 languages (app name + author)
+		for x in range(15):
+			app_name = bytearray(my_name, encoding="utf-8")			# get user-input string
+			app_name += bytearray([0]*(0x200 - len(app_name)))		# pad 0s until 0x200
+			self.nacp[x*0x300:(x*0x300+0x200)] = app_name			# insert into nacp
+			
+			author = bytearray(my_author, encoding="utf-8")			# get user-input string
+			author += bytearray([0]*(0x100 - len(author)))			# pad 0s until 0x200
+			self.nacp[x*0x300+0x200:(x*0x300+0x300)] = author		# insert into nacp
+			
+		# version
+		version = bytearray(my_version, encoding="utf-8")
+		version += bytearray([0]*(0x10 - len(version)))
+		self.nacp[0x3060:0x3060+0x10] = version
+		
 	# return the bytes that makeup this object, based on the fields
 	def getBytes(self):
-		# asset header
+		# asset header magic
 		ret = b"ASET"
 		ret += bytearray([0, 0, 0, 0])
 		
+		# total size of asset header
 		offset = 0x38
 		
 		# first asset section, icon
@@ -131,6 +163,7 @@ class Editor:
 		
 		# metadata, get currently displayed values and isnert
 		# them into every language
+		self.asset.updateNACP(self)
 		
 		# get the asset bytes so we can verify they're there first
 		assetbytes = self.asset.getBytes()
