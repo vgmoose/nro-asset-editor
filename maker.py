@@ -43,24 +43,36 @@ class Asset:
 		ret = b"ASET"
 		ret += bytearray([0, 0, 0, 0])
 		
-		offset = self.offset + 0x38
+		offset = 0x38
 		
 		# first asset section, icon
-		ret += (offset).to_bytes(8, "little")
 		icon_size = len(self.icon)
-		ret += (icon_size).to_bytes(8, "little")
-		offset += icon+size
+		
+		if icon_size > 0:
+			ret += (offset).to_bytes(8, "little")
+			ret += (icon_size).to_bytes(8, "little")
+		else:
+			ret += bytearray([0]*0x10)
+		offset += icon_size
 		
 		# 2nd asset section, nacp metadata
-		ret += (offset).to_bytes(8, "little")
 		nacp_size = len(self.nacp)
-		ret += (nacp_size).to_bytes(8, "little")
+		
+		if nacp_size > 0:
+			ret += (offset).to_bytes(8, "little")
+			ret += (nacp_size).to_bytes(8, "little")
+		else:
+			ret += bytearray([0]*0x10)
 		offset += nacp_size
 		
 		# 3rd asset section, romfs
-		ret += (offset).to_bytes(8, "little")
 		romfs_size = len(self.romfs)
-		ret += (romfs_size).to_bytes(8, "little")
+		
+		if romfs_size > 0:
+			ret += (offset).to_bytes(8, "little")
+			ret += (romfs_size).to_bytes(8, "little")
+		else:
+			ret += bytearray([0]*0x10)
 		offset += romfs_size
 		
 		# write data bytes
@@ -96,8 +108,10 @@ class Editor:
 		self.image = self.image.resize((256, 256), Image.ANTIALIAS)
 		
 		buffer = io.BytesIO()
-		self.image.save(buffer,format="JPEG")
-		self.image = Image.open(buffer)
+		# if it's not already a jpeg, convert it into one
+		if self.image.format != "JPEG":
+			self.image.save(buffer, format="JPEG")
+			self.image = Image.open(buffer)
 		
 		image2 = ImageTk.PhotoImage(self.image)
 		self.imagebox.configure(image=image2)
@@ -105,9 +119,32 @@ class Editor:
 		
 	# update the current NRO with the new asset data
 	def saveNRO(self):
-		with open(self.filename, "wb") as nro:
-			nro.write(self.asset.getBytes())
-			nro.flush()
+		
+		# update any of our asset header values based on what's
+		# been typed in the entry boxes, or the new icon
+		
+		# icon, read out currently displayed jpeg to bytes
+		# quality=keep is needed so it doesn't re-jpeg-ify
+		buffer = io.BytesIO()
+		self.image.save(buffer, format="JPEG", quality="keep")
+		self.asset.icon = bytearray(buffer.getvalue())
+		
+		# metadata, get currently displayed values and isnert
+		# them into every language
+		
+		# get the asset bytes so we can verify they're there first
+		assetbytes = self.asset.getBytes()
+		
+		if assetbytes:
+			with open(self.filename, "wb") as nro:
+				nro.write(self.data)
+				nro.write(assetbytes)
+				nro.flush()
+		else:
+			# failed
+			return False
+		
+		return True
 
 	# prompt for a file browser to select a .NRO file to extract data from
 	def browse(self):
