@@ -1,7 +1,14 @@
 import tkinter as tk
 from tkinter import filedialog
 from PIL import Image, ImageTk
-import io
+import io, sys
+
+defaultPath = "default.jpg"
+
+try:
+	defaultPath = sys._MEIPASS + os.path.sep + defaultPath + os.path.sep + defaultPath
+except:
+	pass
 
 class Asset:
 	def __init__(self, offset):
@@ -134,7 +141,7 @@ class Editor:
 	# prompt for an image file
 	def browse_image(self):
 		# load either the new image or the default one
-		img_url = filedialog.askopenfilename(title = "Select image file",filetypes = (("PNG Files","*.png"),("JPG Files","*.jpg"),("JPEG Files","*.jpeg"), ("GIF Files","*.gif"), ("BMP Files","*.bmp"), ("TGA Files","*.tga"), ("All Files","*.*"))) or 'default.jpg'
+		img_url = filedialog.askopenfilename(title = "Select image file",filetypes = (("PNG Files","*.png"),("JPG Files","*.jpg"),("JPEG Files","*.jpeg"), ("GIF Files","*.gif"), ("BMP Files","*.bmp"), ("TGA Files","*.tga"), ("All Files","*.*"))) or defaultPath
 		
 		self.image = Image.open(img_url).convert("RGB")
 		self.image = self.image.resize((256, 256), Image.ANTIALIAS)
@@ -266,7 +273,7 @@ elems.append(b1)
 #tk.Button(frame, text="Source code").grid(row=7, column=1, padx=(50, 5))
 
 # icon preview
-im = Image.open('default.jpg')
+im = Image.open(defaultPath)
 tkimage = ImageTk.PhotoImage(im)
 
 canvas = tk.Label(frame, image=tkimage)
