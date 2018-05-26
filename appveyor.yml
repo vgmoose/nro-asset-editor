@@ -44,7 +44,7 @@ install:
   - 'python -m pip install -U pip setuptools wheel'
 
   # Install PyInstaller
-  - 'pip install -e PyInstaller'
+  - 'pip install PyInstaller'
 
 build_script:
   - 'pyinstaller --onefile --add-data default.jpg;default.jpg maker.py'

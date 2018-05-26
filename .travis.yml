@@ -4,6 +4,9 @@ matrix:
     - os: linux
     - os: osx
 
+python:
+  - "3.5"
+
 before_script:
-  - pip3 install PyInstaller
+  - pip install PyInstaller
 script:  ./make_binary.sh
