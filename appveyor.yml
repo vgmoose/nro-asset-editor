@@ -1,0 +1,64 @@
+# https://github.com/pyinstaller/pyinstaller/blob/develop/appveyor.yml
+
+clone_depth: 10
+
+environment:
+  APPVEYOR_SAVE_CACHE_ON_ERROR: true
+
+  matrix:
+    - PYTHON: C:\Python36-x64
+      PYTHON_VERSION: 3.6
+      PYTHON_ARCH: 64
+
+init:
+  - "ECHO %PYTHON% %PYTHON_VERSION% %PYTHON_ARCH%"
+  - "ECHO \"%APPVEYOR_SCHEDULED_BUILD%\""
+
+cache:
+  # Cache downloaded pip packages and built wheels.
+  - '%LOCALAPPDATA%\pip\Cache\http'
+  - '%LOCALAPPDATA%\pip\Cache\wheels'
+
+install:
+  - C:\cygwin\bin\du -hs "%LOCALAPPDATA%\pip\Cache"
+  # Prepend newly installed Python to the PATH of this build (this cannot be
+  # done from inside the powershell script as it would require to restart
+  # the parent CMD process).
+  - SET PATH=%PYTHON%;%PYTHON%\Scripts;%PATH%
+
+  # Check that we have the expected version and architecture for Python
+  - python --version
+  - >-
+     %CMD_IN_ENV%
+     python -c "import sys,platform,struct;
+     print(sys.platform, platform.machine(), struct.calcsize('P') * 8, )"
+
+  ### Install the PyInstaller dependencies.
+  # If some dependencies contain
+  # compiled extensions and are not provided as pre-built wheel packages, pip
+  # will build them from source using the MSVC compiler matching the target
+  # Python version and architecture. To achieve this, all commands are run
+  # under control of '%CMD_IN_ENV%' (see above).
+
+  # Upgrade to the latest pip.
+  - 'python -m pip install -U pip setuptools wheel'
+
+  # Install PyInstaller
+  - 'pip install -e PyInstaller'
+
+build_script:
+  - 'pyinstaller --onefile --add-data default.jpg;default.jpg maker.py'
+
+on_finish:
+  # Remove old or huge cache files to hopefully not exceed the 1GB cache limit.
+  #
+  # If the cache limit is reached, the cache will not be updated (of not even
+  # created in the first run). So this is a trade of between keeping the cache
+  # current and having a cache at all.
+  # NB: This is done only `on_success` since the cache in uploaded only on
+  # success anyway.
+  - C:\cygwin\bin\find "%LOCALAPPDATA%\pip" -type f -mtime +360 -delete
+  - C:\cygwin\bin\find "%LOCALAPPDATA%\pip" -type f -size +10M -delete
+  - C:\cygwin\bin\find "%LOCALAPPDATA%\pip" -empty -delete
+  # Show size of cache
+  - C:\cygwin\bin\du -hs "%LOCALAPPDATA%\pip\Cache"

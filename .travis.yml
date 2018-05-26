@@ -1,0 +1,9 @@
+language: python
+matrix:
+  include:
+    - os: linux
+    - os: osx
+
+before_script:
+  - pip3 install PyInstaller
+script:  ./make_binary.sh
