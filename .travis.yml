@@ -1,12 +1,31 @@
 language: python
+
 matrix:
   include:
-    - os: linux
-    - os: osx
+  - os: linux
+  - os: osx
 
 python:
-  - "3.5"
+- '3.4'
 
 before_script:
-  - pip install PyInstaller
-script:  ./make_binary.sh
+- pip install PyInstaller
+
+script: "./make_binary.sh"
+
+before_deploy:
+- git config --local user.name "vgmoose"
+- git config --local user.email "me@vgmoose.com"
+- git tag "travis-$(date +'%Y%m%d%H%M%S')-$(git log --format=%h -1)"
+
+deploy:
+  provider: releases
+  api_key: "$GITHUB_OAUTH_TOKEN"
+  file: dist/maker
+  skip_cleanup: true
+  on:
+    tags: true
+
+env:
+  global:
+    secure: G5Q2cWnEb3+x8pENs2gf9ngZq5ivn46K4D0Y4HMVcGPY/L7cvc4UfkcU8vvc2CWvS6QXRgPfLjF2VeFnmc6+9PgBWYwxXEe+Jddh9kwqWagUZrFCiIgl2171os9LqEExSpkDyt0TUgWsli2g96RbMOlpSSGDu3kiTsH/4zPJQhNJ+Fyg/Tm3C0/5z6BqfzrHe3OTuOZeeYiU5eO5EMSKkWM4Iq8Xagpbxvhv65sg+YAoStnD5CSWHgkpzcAlK/sSqkPo1h6f2/40wiACsQnaIgTOwgPBwQODqCdKgYj3pkV52uLtMcKZCZ3uukX+oAIklA0/+w0y2ms/g/A2cIHAz7AAhF27Qktv3+Ut/6I03UeB5RJSHivLdcJYZDuaIE9JbK1Y8SMqi/kJqCZFvqoQFiIFLWHbtzlu3Oy3chR4G5hrQJ16Q/uCfyNdOZPwDBro9zQUnElUTccyO4YI7iUz1WYAmhn1BUXAmmZAqPwusTmaD/82ja4qKZ3E7qQN+OM0vuRcTZ0QrA2pyfv739TyhCgMZsU5p5/Hud8y7KOb65v22+48rd67bfehybspnDSxOkeVv4uFYUK8LS82snT3iNu4pXrUZqLrS85532gu8xVkz3UyXJRbEywcZDpCSe1Q90R/oJtuW72m9WdyKDtn5pPLSCxzTaulT4eHUz8pThQ=

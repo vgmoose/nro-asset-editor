@@ -49,6 +49,20 @@ install:
 build_script:
   - 'pyinstaller --onefile --add-data default.jpg;default.jpg maker.py'
 
+deploy:
+  release: appveyor-(appveyor_build_version)
+  description: 'Automatic Windows build'
+  provider: GitHub
+  auth_token:
+    secure: +mlxGMdAPau96ntD+REJn6PIoV9dzPbYXwloirLZ8++FoJ1WEkPLABhELdrS3u1A
+  artifact: dist/maker.exe            # upload all NuGet packages to release assets
+  draft: false
+  prerelease: false
+  on:
+    branch: master                 # release from master branch only
+    appveyor_repo_tag: true        # deploy on tag push only
+
+
 on_finish:
   # Remove old or huge cache files to hopefully not exceed the 1GB cache limit.
   #
