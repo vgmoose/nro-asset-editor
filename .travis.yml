@@ -6,7 +6,7 @@ matrix:
   - os: osx
 
 python:
-- '3.4'
+- '3.6'
 
 before_script:
 - pip install PyInstaller
@@ -23,8 +23,6 @@ deploy:
   api_key: "$GITHUB_OAUTH_TOKEN"
   file: dist/maker
   skip_cleanup: true
-  on:
-    tags: true
 
 env:
   global:
